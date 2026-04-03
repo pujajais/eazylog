@@ -118,7 +118,8 @@ Respond with ONLY valid JSON in this exact format:
       return NextResponse.json({ error: 'Unexpected response' }, { status: 500 });
     }
 
-    const parsed = JSON.parse(content.text);
+    const raw = content.text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+    const parsed = JSON.parse(raw);
     return NextResponse.json(parsed);
   } catch (err) {
     console.error('Parse symptom error:', err);

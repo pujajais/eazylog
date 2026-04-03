@@ -104,7 +104,7 @@ const demoStore: Record<string, Record<string, unknown>[]> = {
 function createMockClient() {
   // Chain builder for mock queries
   function createQueryBuilder(table: string) {
-    let filters: Array<{ col: string; val: unknown }> = [];
+    const filters: Array<{ col: string; val: unknown }> = [];
     let orderCol = '';
     let orderAsc = true;
     let isInsert = false;
@@ -114,7 +114,7 @@ function createMockClient() {
     let isSelect = false;
 
     const builder: Record<string, unknown> = {
-      select(_cols?: string) {
+      select(_cols?: string) { // eslint-disable-line @typescript-eslint/no-unused-vars
         isSelect = true;
         return builder;
       },
