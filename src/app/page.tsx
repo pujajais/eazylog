@@ -45,28 +45,44 @@ export default function LandingPage() {
           </p>
         </div>
 
-        {/* Auth Buttons */}
-        <div className="space-y-3">
-          <Link
-            href="/signup"
-            className="block w-full py-4 rounded-2xl bg-sage-500 text-white text-lg
-                       font-serif text-center hover:bg-sage-600 transition-all shadow-lg
-                       shadow-sage-200 active:scale-[0.98]"
-          >
-            Sign Up
-          </Link>
-          <Link
-            href="/login"
-            className="block w-full py-4 rounded-2xl border-2 border-sage-500 text-sage-600 text-lg
-                       font-serif text-center hover:bg-sage-50 transition-all active:scale-[0.98]"
-          >
-            Log In
-          </Link>
+        {/* Feature Cards */}
+        <div className="space-y-3 text-left">
+          <div className="flex items-start gap-3 p-4 bg-white rounded-xl">
+            <span className="text-2xl">🎙️</span>
+            <div>
+              <p className="font-serif text-gray-700 font-medium">Speak, don&apos;t type</p>
+              <p className="text-sm text-gray-500 font-sans">Voice-to-text when typing hurts too much.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 p-4 bg-white rounded-xl">
+            <span className="text-2xl">⚡</span>
+            <div>
+              <p className="font-serif text-gray-700 font-medium">One-tap logging</p>
+              <p className="text-sm text-gray-500 font-sans">Log common symptoms with a single tap.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 p-4 bg-white rounded-xl">
+            <span className="text-2xl">📋</span>
+            <div>
+              <p className="font-serif text-gray-700 font-medium">Doctor-ready reports</p>
+              <p className="text-sm text-gray-500 font-sans">AI summarizes your history into clean reports.</p>
+            </div>
+          </div>
         </div>
 
-        {/* Privacy */}
-        <p className="text-xs text-gray-400 font-sans">
-          Your data stays yours. We never sell or share your health data.
+        {/* CTA */}
+        <Link
+          href="/signup"
+          className="block w-full py-4 rounded-2xl bg-sage-500 text-white text-lg
+                     font-serif text-center hover:bg-sage-600 transition-all shadow-lg
+                     shadow-sage-200 active:scale-[0.98]"
+        >
+          Get Started
+        </Link>
+
+        <p className="text-xs text-gray-400 font-sans text-center">
+          Already have an account?{' '}
+          <Link href="/login" className="text-sage-600 underline">Log in</Link>
         </p>
       </div>
     </main>
