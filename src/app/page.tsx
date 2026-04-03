@@ -8,10 +8,30 @@ import { Heart } from 'lucide-react';
 export default function LandingPage() {
   const [showAuth, setShowAuth] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');
   const supabase = createClient();
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const errorCode = params.get('error_code');
+    const error = params.get('error');
+
+    if (errorCode === 'otp_expired') {
+      setErrorMsg('That sign-in link has expired. Please sign in again below.');
+      setShowAuth(true);
+      setChecking(false);
+      return;
+    }
+    if (error === 'access_denied') {
+      setErrorMsg('Sign-in link was invalid. Please try again.');
+      setShowAuth(true);
+      setChecking(false);
+      return;
+    }
+
+    const timeout = setTimeout(() => setChecking(false), 3000);
     supabase.auth.getSession().then(({ data: { session } }) => {
+      clearTimeout(timeout);
       if (session) {
         window.location.href = '/log';
       } else {
@@ -43,6 +63,12 @@ export default function LandingPage() {
           </p>
         </div>
 
+        {errorMsg && (
+          <div className="p-4 bg-terra-50 border border-terra-200 rounded-xl text-terra-600 text-sm font-sans">
+            {errorMsg}
+          </div>
+        )}
+
         {!showAuth && (
           <div className="space-y-4 text-left">
             <div className="flex items-start gap-3 p-4 bg-white rounded-xl">
@@ -72,12 +98,14 @@ export default function LandingPage() {
         {showAuth ? (
           <div className="space-y-4">
             <AuthForm />
-            <button
-              onClick={() => setShowAuth(false)}
-              className="text-sm text-gray-400 font-sans underline"
-            >
-              Back
-            </button>
+            {!errorMsg && (
+              <button
+                onClick={() => setShowAuth(false)}
+                className="text-sm text-gray-400 font-sans underline"
+              >
+                Back
+              </button>
+            )}
           </div>
         ) : (
           <button
