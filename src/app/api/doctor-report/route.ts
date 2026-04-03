@@ -40,15 +40,15 @@ function mockReport(entries: EntryData[]) {
    Total entries: ${entries.length}
    Severity range: ${Math.min(...severities)}–${Math.max(...severities)}/10
    Average severity: ${avgSeverity}/10
-   Affected areas: ${[...locations].join(', ') || 'None specified'}
-   Reported triggers: ${[...triggers].join(', ') || 'None noted'}
+   Affected areas: ${Array.from(locations).join(', ') || 'None specified'}
+   Reported triggers: ${Array.from(triggers).join(', ') || 'None noted'}
 
 3. DETAILED CHRONOLOGICAL LOG
 ${chronological}
 
 4. PATTERNS & TRIGGERS OBSERVED
-   - Most affected areas: ${[...locations].slice(0, 3).join(', ')}
-   - Common triggers: ${[...triggers].slice(0, 3).join(', ') || 'None consistently reported'}
+   - Most affected areas: ${Array.from(locations).slice(0, 3).join(', ')}
+   - Common triggers: ${Array.from(triggers).slice(0, 3).join(', ') || 'None consistently reported'}
    - Chronic symptoms reported: ${entries.some(e => e.is_chronic) ? 'Yes' : 'No'}
 
 5. PATIENT'S OWN DESCRIPTIONS
