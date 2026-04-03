@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="36" fill="#5B8C7B"/>
+  <path d="M96 48c-18 0-32 14-32 32 0 30 32 60 32 60s32-30 32-60c0-18-14-32-32-32zm0 44c-7 0-12-5-12-12s5-12 12-12 12 5 12 12-5 12-12 12z" fill="#FAF7F2"/>
+  <text x="96" y="160" text-anchor="middle" font-family="Georgia,serif" font-size="28" font-weight="bold" fill="#FAF7F2">EazyLog</text>
+</svg>
