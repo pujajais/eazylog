@@ -1,34 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import AuthForm from '@/components/AuthForm';
 import { Heart } from 'lucide-react';
+import Link from 'next/link';
 
 export default function LandingPage() {
-  const [showAuth, setShowAuth] = useState(false);
   const [checking, setChecking] = useState(true);
-  const [errorMsg, setErrorMsg] = useState('');
   const supabase = createClient();
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const errorCode = params.get('error_code');
-    const error = params.get('error');
-
-    if (errorCode === 'otp_expired') {
-      setErrorMsg('That sign-in link has expired. Please sign in again below.');
-      setShowAuth(true);
-      setChecking(false);
-      return;
-    }
-    if (error === 'access_denied') {
-      setErrorMsg('Sign-in link was invalid. Please try again.');
-      setShowAuth(true);
-      setChecking(false);
-      return;
-    }
-
     const timeout = setTimeout(() => setChecking(false), 3000);
     supabase.auth.getSession().then(({ data: { session } }) => {
       clearTimeout(timeout);
@@ -52,7 +33,8 @@ export default function LandingPage() {
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 bg-cream-100">
-      <div className="max-w-md w-full text-center space-y-8">
+      <div className="max-w-sm w-full text-center space-y-10">
+        {/* Logo & Tagline */}
         <div className="space-y-3">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-sage-100">
             <Heart className="text-sage-500" size={36} />
@@ -63,64 +45,28 @@ export default function LandingPage() {
           </p>
         </div>
 
-        {errorMsg && (
-          <div className="p-4 bg-terra-50 border border-terra-200 rounded-xl text-terra-600 text-sm font-sans">
-            {errorMsg}
-          </div>
-        )}
-
-        {!showAuth && (
-          <div className="space-y-4 text-left">
-            <div className="flex items-start gap-3 p-4 bg-white rounded-xl">
-              <span className="text-2xl">🎙️</span>
-              <div>
-                <p className="font-serif text-gray-700 font-medium">Speak, don&apos;t type</p>
-                <p className="text-sm text-gray-500 font-sans">Voice-to-text when typing hurts too much.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-4 bg-white rounded-xl">
-              <span className="text-2xl">⚡</span>
-              <div>
-                <p className="font-serif text-gray-700 font-medium">One-tap logging</p>
-                <p className="text-sm text-gray-500 font-sans">Log common symptoms with a single tap.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-4 bg-white rounded-xl">
-              <span className="text-2xl">📋</span>
-              <div>
-                <p className="font-serif text-gray-700 font-medium">Doctor-ready reports</p>
-                <p className="text-sm text-gray-500 font-sans">AI summarizes your history into clean reports.</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {showAuth ? (
-          <div className="space-y-4">
-            <AuthForm />
-            {!errorMsg && (
-              <button
-                onClick={() => setShowAuth(false)}
-                className="text-sm text-gray-400 font-sans underline"
-              >
-                Back
-              </button>
-            )}
-          </div>
-        ) : (
-          <button
-            onClick={() => setShowAuth(true)}
-            className="w-full py-4 rounded-2xl bg-sage-500 text-white text-lg
-                       font-serif hover:bg-sage-600 transition-all shadow-lg
+        {/* Auth Buttons */}
+        <div className="space-y-3">
+          <Link
+            href="/signup"
+            className="block w-full py-4 rounded-2xl bg-sage-500 text-white text-lg
+                       font-serif text-center hover:bg-sage-600 transition-all shadow-lg
                        shadow-sage-200 active:scale-[0.98]"
           >
-            Get Started
-          </button>
-        )}
+            Sign Up
+          </Link>
+          <Link
+            href="/login"
+            className="block w-full py-4 rounded-2xl border-2 border-sage-500 text-sage-600 text-lg
+                       font-serif text-center hover:bg-sage-50 transition-all active:scale-[0.98]"
+          >
+            Log In
+          </Link>
+        </div>
 
+        {/* Privacy */}
         <p className="text-xs text-gray-400 font-sans">
-          EazyLog never diagnoses or gives medical advice.<br />
-          Your data is private and encrypted.
+          Your data stays yours. We never sell or share your health data.
         </p>
       </div>
     </main>

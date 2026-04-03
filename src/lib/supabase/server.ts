@@ -9,6 +9,7 @@ export function createServerSupabaseClient() {
     return {
       auth: {
         exchangeCodeForSession: () => Promise.resolve({ error: null }),
+        verifyOtp: () => Promise.resolve({ error: null }),
         getSession: () => Promise.resolve({ data: { session: null }, error: null }),
       },
     } as ReturnType<typeof createServerClient>;
