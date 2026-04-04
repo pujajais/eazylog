@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Heart } from 'lucide-react';
+import Link from 'next/link';
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('');
@@ -10,18 +11,17 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
-  const [ready, setReady] = useState(false);
+  // null = still checking, true = ready, false = no valid session
+  const [ready, setReady] = useState<boolean | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
-    // Supabase sets the session from the URL hash automatically;
-    // we just need to wait for the auth state to settle.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setReady(true);
-      }
+    // In PKCE flow the server already exchanged the code and set the session
+    // cookie before redirecting here — so getSession() will return the recovery
+    // session immediately. We don't need to wait for PASSWORD_RECOVERY event.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setReady(!!session);
     });
-    return () => subscription.unsubscribe();
   }, [supabase.auth]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,6 +46,42 @@ export default function ResetPasswordPage() {
     }
   };
 
+  // Still checking session
+  if (ready === null) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-cream-100">
+        <div className="animate-pulse text-sage-400">
+          <Heart size={40} />
+        </div>
+      </main>
+    );
+  }
+
+  // No valid session — link expired or accessed directly
+  if (ready === false) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center px-6 bg-cream-100">
+        <div className="max-w-sm w-full text-center space-y-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-terra-100">
+            <Heart className="text-terra-500" size={28} />
+          </div>
+          <h2 className="text-2xl font-serif text-gray-800">Link expired</h2>
+          <p className="text-sm text-gray-500 font-sans">
+            This password reset link is no longer valid.<br />
+            Please request a new one.
+          </p>
+          <Link
+            href="/login"
+            className="inline-block px-6 py-3 rounded-xl bg-sage-500 text-white font-sans text-sm font-medium hover:bg-sage-600 transition-colors"
+          >
+            Back to login
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  // Password updated success
   if (done) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center px-6 bg-cream-100">
@@ -60,27 +96,18 @@ export default function ResetPasswordPage() {
     );
   }
 
-  if (!ready) {
-    return (
-      <main className="min-h-screen flex flex-col items-center justify-center px-6 bg-cream-100">
-        <div className="animate-pulse text-sage-400">
-          <Heart size={40} />
-        </div>
-      </main>
-    );
-  }
-
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 bg-cream-100">
-      <div className="max-w-sm w-full space-y-6">
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-sage-100">
-            <Heart className="text-sage-500" size={24} />
+      <div className="max-w-sm w-full space-y-8">
+        <div className="text-center space-y-3">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-sage-100">
+            <Heart className="text-sage-500" size={28} />
           </div>
-          <h1 className="text-2xl font-serif text-gray-800">Set a new password</h1>
+          <h1 className="text-3xl font-serif text-gray-800">Set a new password</h1>
+          <p className="text-sm text-gray-500 font-sans">Choose something you&apos;ll remember.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="password"
             placeholder="New password (min. 8 characters)"
@@ -88,7 +115,8 @@ export default function ResetPasswordPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={8}
-            className="w-full px-4 py-3 rounded-xl bg-white border border-sage-200
+            autoComplete="new-password"
+            className="w-full px-4 py-3.5 rounded-xl bg-white border border-sage-200
                        focus:outline-none focus:ring-2 focus:ring-sage-300
                        text-gray-700 placeholder-gray-400 font-sans text-sm"
           />
@@ -98,22 +126,24 @@ export default function ResetPasswordPage() {
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             required
-            className="w-full px-4 py-3 rounded-xl bg-white border border-sage-200
+            autoComplete="new-password"
+            className="w-full px-4 py-3.5 rounded-xl bg-white border border-sage-200
                        focus:outline-none focus:ring-2 focus:ring-sage-300
                        text-gray-700 placeholder-gray-400 font-sans text-sm"
           />
 
           {error && (
-            <p className="text-sm text-terra-600 font-sans bg-terra-50 border border-terra-200 rounded-xl px-4 py-3">
+            <div className="px-4 py-3 rounded-xl bg-terra-50 border border-terra-200 text-terra-600 text-sm font-sans">
               {error}
-            </p>
+            </div>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl bg-sage-500 text-white font-sans font-medium
-                       hover:bg-sage-600 transition-colors disabled:opacity-50"
+            className="w-full py-4 rounded-2xl bg-sage-500 text-white text-lg
+                       font-serif hover:bg-sage-600 transition-all shadow-lg
+                       shadow-sage-200 active:scale-[0.98] disabled:opacity-50"
           >
             {loading ? 'Saving…' : 'Update Password'}
           </button>
