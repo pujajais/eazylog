@@ -10,41 +10,49 @@ export async function GET(request: Request) {
   const type = searchParams.get('type');
   const next = searchParams.get('next') ?? '/log';
 
-  // Determine the correct base URL — prefer the forwarded host (Vercel/proxy)
-  // so redirects work on both localhost and production.
   const forwardedHost = request.headers.get('x-forwarded-host');
   const forwardedProto = request.headers.get('x-forwarded-proto') ?? 'https';
   const baseUrl = forwardedHost
     ? `${forwardedProto}://${forwardedHost}`
     : requestUrl.origin;
 
+  // ── Recovery links: NEVER exchange server-side. ───────────────────────────
+  // Pass the code straight to the reset-password page so the *client* can
+  // call exchangeCodeForSession — that's what sets the in-memory auth state
+  // that updateUser({ password }) requires. Exchanging server-side sets a
+  // cookie but the client auth state stays empty → "reauthentication required".
+  if (code && type === 'recovery') {
+    return NextResponse.redirect(
+      `${baseUrl}/auth/reset-password?code=${encodeURIComponent(code)}`
+    );
+  }
+
   const supabase = createServerSupabaseClient();
 
-  // PKCE code flow (email confirmation + OAuth + password reset)
+  // ── Normal PKCE code flow (email confirmation, OAuth) ─────────────────────
   if (code) {
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error && data.session) {
-      if (type === 'recovery') {
-        return NextResponse.redirect(`${baseUrl}/auth/reset-password`);
-      }
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error) {
       return NextResponse.redirect(`${baseUrl}${next}`);
     }
   }
 
-  // Token hash flow (older email OTP links)
+  // ── Token hash flow (older OTP email links) ───────────────────────────────
   if (tokenHash && type) {
+    if (type === 'recovery') {
+      // Same principle — pass through to reset page
+      return NextResponse.redirect(
+        `${baseUrl}/auth/reset-password?token_hash=${encodeURIComponent(tokenHash)}`
+      );
+    }
     const { error } = await supabase.auth.verifyOtp({
       token_hash: tokenHash,
-      type: type as 'email' | 'recovery' | 'magiclink' | 'email_change',
+      type: type as 'email' | 'magiclink' | 'email_change',
     });
     if (!error) {
-      if (type === 'recovery') {
-        return NextResponse.redirect(`${baseUrl}/auth/reset-password`);
-      }
       return NextResponse.redirect(`${baseUrl}${next}`);
     }
   }
 
-  // All failed — send back to login with error flag
   return NextResponse.redirect(`${baseUrl}/login?error=auth`);
 }
