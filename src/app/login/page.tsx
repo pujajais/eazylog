@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Heart } from 'lucide-react';
+import { Heart, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 
 export default function LoginPage() {
@@ -14,6 +14,9 @@ export default function LoginPage() {
   const [resetEmail, setResetEmail] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
   const [resetDone, setResetDone] = useState(false);
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState('');
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMsg, setResendMsg] = useState('');
   const supabase = createClient();
 
   useEffect(() => {
@@ -30,10 +33,28 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
-      setError('Invalid email or password.');
+      const msg = error.message.toLowerCase();
+      if (msg.includes('email not confirmed') || msg.includes('not confirmed')) {
+        setUnconfirmedEmail(email);
+        setError('');
+      } else {
+        setError('Invalid email or password.');
+      }
     } else {
       window.location.href = '/log';
     }
+  };
+
+  const handleResendConfirmation = async () => {
+    setResendLoading(true);
+    setResendMsg('');
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: unconfirmedEmail,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    });
+    setResendLoading(false);
+    setResendMsg(error ? 'Could not resend. Try again in a minute.' : 'Sent! Check your inbox and spam folder.');
   };
 
   const handleForgot = async (e: React.FormEvent) => {
@@ -150,6 +171,31 @@ export default function LoginPage() {
               </button>
             </div>
           </div>
+
+          {unconfirmedEmail && (
+            <div className="px-4 py-4 rounded-xl bg-sage-50 border border-sage-200 space-y-3">
+              <p className="text-sm text-gray-700 font-sans">
+                <strong>Your email isn&apos;t verified yet.</strong><br />
+                Check your inbox for a confirmation link from EazyLog.
+              </p>
+              <button
+                type="button"
+                onClick={handleResendConfirmation}
+                disabled={resendLoading}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl
+                           border border-sage-300 text-sage-600 font-sans text-sm font-medium
+                           hover:bg-white transition-colors disabled:opacity-50"
+              >
+                <RefreshCw size={14} className={resendLoading ? 'animate-spin' : ''} />
+                {resendLoading ? 'Sending…' : 'Resend verification email'}
+              </button>
+              {resendMsg && (
+                <p className={`text-xs font-sans ${resendMsg.startsWith('Sent') ? 'text-sage-600' : 'text-terra-500'}`}>
+                  {resendMsg}
+                </p>
+              )}
+            </div>
+          )}
 
           {error && (
             <p className="text-sm text-terra-600 font-sans bg-terra-50 border border-terra-200 rounded-xl px-4 py-3">
